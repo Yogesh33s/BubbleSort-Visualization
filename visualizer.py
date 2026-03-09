@@ -1,34 +1,47 @@
+import matplotlib
+matplotlib.use('Agg')  # important for servers
+
 import matplotlib.pyplot as plt
 import numpy as np
+from flask import Flask, send_file
+import io
+
+app = Flask(__name__)
 
 def bubble_sort(arr):
     n = len(arr)
+    steps = []
+
     for i in range(n):
         for j in range(0, n-i-1):
             if arr[j] > arr[j+1]:
                 arr[j], arr[j+1] = arr[j+1], arr[j]
-                display_array(arr)
-    # Display the final sorted array without clearing
-    display_array(arr, final=True)
+            steps.append(arr.copy())
 
-def display_array(arr, delay=0.15, final=False):
-    plt.bar(range(len(arr)), arr, color='blue' if not final else 'green')
-    plt.pause(delay)
-    if not final:
-        plt.clf()
+    return steps
 
-def main():
-    # Create a random array of integers
+def create_plot():
     arr = np.random.randint(1, 100, 20)
-    print("Initial array:", arr)
-    
-    # Perform bubble sort and visualize
-    bubble_sort(arr)
-    
-    #  show final plot
-  
-    plt.show()
+    steps = bubble_sort(arr.copy())
 
+    fig, ax = plt.subplots()
+
+    for step in steps:
+        ax.clear()
+        ax.bar(range(len(step)), step, color='blue')
+
+    ax.set_title("Bubble Sort Visualization")
+
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+
+    return img
+
+@app.route("/")
+def home():
+    img = create_plot()
+    return send_file(img, mimetype='image/png')
 
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=10000)
