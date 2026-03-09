@@ -1,70 +1,39 @@
-import matplotlib
-matplotlib.use("Agg")
-
 import matplotlib.pyplot as plt
 import numpy as np
-from flask import Flask, send_file
-import io
-import os
-import imageio
 
-app = Flask(__name__)
-
-# Generate bubble sort steps
-def bubble_sort_steps(arr):
-    steps = []
+def bubble_sort(arr):
     n = len(arr)
-
     for i in range(n):
         for j in range(0, n-i-1):
             if arr[j] > arr[j+1]:
                 arr[j], arr[j+1] = arr[j+1], arr[j]
-            steps.append(arr.copy())
+                display_array(arr)
 
-    return steps
+    # Display final sorted array
+    display_array(arr, final=True)
 
 
-@app.route("/")
-def home():
+def display_array(arr, delay=0.15, final=False):
 
-    # smaller array for smoother animation
-    arr = np.random.randint(1, 100, 12)
+    plt.bar(range(len(arr)), arr, color='blue' if not final else 'green')
+    plt.pause(delay)
 
-    steps = bubble_sort_steps(arr.copy())
+    if not final:
+        plt.clf()
 
-    frames = []
 
-    for step in steps:
-        fig, ax = plt.subplots()
+def main():
 
-        ax.bar(range(len(step)), step, color="blue")
-        ax.set_title("Bubble Sort Visualization")
+    # Create random array
+    arr = np.random.randint(1, 100, 20)
 
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png")
-        buf.seek(0)
+    print("Initial array:", arr)
 
-        frames.append(imageio.v2.imread(buf))
-        plt.close(fig)
+    bubble_sort(arr)
 
-    # Create GIF animation
-    gif_bytes = io.BytesIO()
-
-    total_animation_time = 15  # seconds
-    frame_duration = total_animation_time / len(frames)
-
-    imageio.mimsave(
-        gif_bytes,
-        frames,
-        format="GIF",
-        duration=frame_duration
-    )
-
-    gif_bytes.seek(0)
-
-    return send_file(gif_bytes, mimetype="image/gif")
+    # Keep final plot open
+    plt.show()
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    main()
