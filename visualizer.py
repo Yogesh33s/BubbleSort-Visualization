@@ -6,33 +6,47 @@ import numpy as np
 from flask import Flask, send_file
 import io
 import os
+import imageio
 
 app = Flask(__name__)
 
-def bubble_sort(arr):
+def bubble_sort_steps(arr):
+    steps = []
     n = len(arr)
+
     for i in range(n):
         for j in range(0, n-i-1):
             if arr[j] > arr[j+1]:
                 arr[j], arr[j+1] = arr[j+1], arr[j]
-    return arr
+            steps.append(arr.copy())
+
+    return steps
 
 @app.route("/")
 def home():
 
     arr = np.random.randint(1, 100, 20)
-    sorted_arr = bubble_sort(arr.copy())
+    steps = bubble_sort_steps(arr.copy())
 
-    fig, ax = plt.subplots()
+    frames = []
 
-    ax.bar(range(len(sorted_arr)), sorted_arr, color="green")
-    ax.set_title("Bubble Sort Result")
+    for step in steps:
+        fig, ax = plt.subplots()
+        ax.bar(range(len(step)), step, color="blue")
+        ax.set_title("Bubble Sort Visualization")
 
-    img = io.BytesIO()
-    plt.savefig(img, format="png")
-    img.seek(0)
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
+        buf.seek(0)
 
-    return send_file(img, mimetype="image/png")
+        frames.append(imageio.v2.imread(buf))
+        plt.close(fig)
+
+    gif_bytes = io.BytesIO()
+    imageio.mimsave(gif_bytes, frames, format="GIF", duration=0.2)
+    gif_bytes.seek(0)
+
+    return send_file(gif_bytes, mimetype="image/gif")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
