@@ -10,6 +10,7 @@ import imageio
 
 app = Flask(__name__)
 
+# Generate bubble sort steps
 def bubble_sort_steps(arr):
     steps = []
     n = len(arr)
@@ -22,16 +23,20 @@ def bubble_sort_steps(arr):
 
     return steps
 
+
 @app.route("/")
 def home():
 
-    arr = np.random.randint(1, 100, 20)
+    # smaller array for smoother animation
+    arr = np.random.randint(1, 100, 12)
+
     steps = bubble_sort_steps(arr.copy())
 
     frames = []
 
     for step in steps:
         fig, ax = plt.subplots()
+
         ax.bar(range(len(step)), step, color="blue")
         ax.set_title("Bubble Sort Visualization")
 
@@ -42,11 +47,23 @@ def home():
         frames.append(imageio.v2.imread(buf))
         plt.close(fig)
 
+    # Create GIF animation
     gif_bytes = io.BytesIO()
-    imageio.mimsave(gif_bytes, frames, format="GIF", duration=0.2)
+
+    total_animation_time = 15  # seconds
+    frame_duration = total_animation_time / len(frames)
+
+    imageio.mimsave(
+        gif_bytes,
+        frames,
+        format="GIF",
+        duration=frame_duration
+    )
+
     gif_bytes.seek(0)
 
     return send_file(gif_bytes, mimetype="image/gif")
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
