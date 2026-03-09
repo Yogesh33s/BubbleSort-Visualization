@@ -1,50 +1,39 @@
 import matplotlib
-matplotlib.use('Agg')  # important for servers
+matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 import numpy as np
 from flask import Flask, send_file
 import io
+import os
 
 app = Flask(__name__)
 
 def bubble_sort(arr):
     n = len(arr)
-    steps = []
-
     for i in range(n):
         for j in range(0, n-i-1):
             if arr[j] > arr[j+1]:
                 arr[j], arr[j+1] = arr[j+1], arr[j]
-            steps.append(arr.copy())
-
-    return steps
-
-def create_plot():
-    arr = np.random.randint(1, 100, 20)
-    steps = bubble_sort(arr.copy())
-
-    fig, ax = plt.subplots()
-
-    for step in steps:
-        ax.clear()
-        ax.bar(range(len(step)), step, color='blue')
-
-    ax.set_title("Bubble Sort Visualization")
-
-    img = io.BytesIO()
-    plt.savefig(img, format='png')
-    img.seek(0)
-
-    return img
+    return arr
 
 @app.route("/")
 def home():
-    img = create_plot()
-    return send_file(img, mimetype='image/png')
+
+    arr = np.random.randint(1, 100, 20)
+    sorted_arr = bubble_sort(arr.copy())
+
+    fig, ax = plt.subplots()
+
+    ax.bar(range(len(sorted_arr)), sorted_arr, color="green")
+    ax.set_title("Bubble Sort Result")
+
+    img = io.BytesIO()
+    plt.savefig(img, format="png")
+    img.seek(0)
+
+    return send_file(img, mimetype="image/png")
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
-
